@@ -5,6 +5,9 @@ import tailwindcss from '@tailwindcss/vite'
 // https://vite.dev/config/
 export default defineConfig({
   server: {
+    allowedHosts: [
+      'altitudess.onrender.com'
+    ],
     proxy: {
       // '/api': 'http://localhost:3000'
       '/api':{
