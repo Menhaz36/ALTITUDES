@@ -3,11 +3,13 @@ import { UseBooking } from '../../contexts/Useboooking.jsx'
 import '../../App.css'
 import './final.css'
 import axios from 'axios';
+import { useNavigate } from 'react-router-dom';
 
 
 const Final = () => {
 
     const { bookingData } = UseBooking();
+    const navigate = useNavigate();
     const hasBooked = useRef(false);
 
     console.log(bookingData);
@@ -66,6 +68,24 @@ const Final = () => {
             storeBookingData();
         }, []);  // ✅ changed from [bookingData] to [] — only run once on mount
 
+        useEffect(() => {
+            // Push a new state so there is something to "go back" to 
+            // that isn't the previous page
+            window.history.pushState(null, null, window.location.pathname);
+
+            const handleBackButton = (e) => {
+                // Prevent the back movement
+                window.history.pushState(null, null, window.location.pathname);
+                alert("Booking confirmed. You cannot go back to the payment page.");
+            };
+
+            window.addEventListener('popstate', handleBackButton);
+
+            return () => {
+                window.removeEventListener('popstate', handleBackButton);
+            };
+        }, []);
+
     
 
     return (
@@ -113,6 +133,14 @@ const Final = () => {
                     <h2 className="text-2xl font-bold text-gray-800">
                     Total Price: <span className="text-green-600">₹{bookingData.totalPrice}</span>
                     </h2>
+                </div>
+                <div className="flex justify-center mt-6">
+                    <button 
+                        onClick={() => navigate('/', { replace: true })}
+                        className="bg-white-80 text-white px-8 py-3 rounded-full font-bold hover:bg-gray-600 transition-colors"
+                    >
+                        Return to Home
+                    </button>
                 </div>
                 </div>
 

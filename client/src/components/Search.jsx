@@ -14,9 +14,17 @@ const Search = () => {
 
     const [flights, setFlights] = useState(null); // <-- null means "not searched yet"
 
-    const SearchForFlights = async (source, destination, date) => {
+    //new state for load more
+    const [visibleCount, setVisibleCount] = useState(5);
 
+    //loading
+    const [loading, setLoading] = useState(false);
+    const [loadingMore, setLoadingMore] = useState(false);
+
+    const SearchForFlights = async (source, destination, date) => {
         try {
+            setLoading(true);
+            setVisibleCount(5);
             console.log('Searching flights with:', { source, destination, date });
             const from = cityToIATA[source] ?? source; // fallback to raw input
              const to   = cityToIATA[destination] ?? destination;
@@ -33,10 +41,21 @@ const Search = () => {
         } catch (error) {
             console.error('Error searching flights:', error);
             setFlights([]);
+        } finally {
+            setLoading(false);
         }
     };
 
     const navigate = useNavigate();
+
+    const handleSeeMore = () => {
+        setLoadingMore(true);
+        // Simulate a small delay for better UX, or just increment
+        setTimeout(() => {
+            setVisibleCount(prev => prev + 5);
+            setLoadingMore(false);
+        }, 400); 
+    };
 
     const handleClick = (flightID, flightName) => {
         navigate(`/flight/${flightID}`, {
@@ -136,37 +155,84 @@ const Search = () => {
                     </div> */}
 
 
-                    <button className="mt-7 w-64 flex items-center justify-center gap-2 rounded-md bg-linear-to-r from-black to-gray-600 shadow-2xl/35 py-3 px-6 text-white font-medium my-auto cursor-pointer max-md:w-full max-md:py-2 
-                hover:from-gray-500 hover:to-black active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg" onClick={() => {
-
-                            SearchForFlights(source, destination, date)
-                        }}
+                    <button
+                            disabled={loading}
+                            className="mt-7 w-64 flex items-center justify-center gap-2 rounded-md bg-linear-to-r from-black to-gray-600 shadow-2xl/35 py-3 px-6 text-white font-medium my-auto cursor-pointer max-md:w-full max-md:py-2 
+                                 hover:from-gray-500 hover:to-black active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg" 
+                            onClick={() => {
+                                        SearchForFlights(source, destination, date)
+                                             }}
+                            
                     >
-                        <svg className="w-4 h-4 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" >
+                        {/* <svg className="w-4 h-4 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" >
                             <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
                         </svg>
-                        <span>Search</span>
+                        <span>Search</span> */}
+                        {loading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                            <>
+                                <svg className="w-4 h-4 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24" >
+                                    <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="m21 21-3.5-3.5M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z" />
+                                </svg>
+                                <span>Search</span>
+                            </>
+                        )}
 
                     </button>
 
 
                 </div>
 
-
+                {/* RESULTS SECTION */}
                 <div className="mt-6 w-full ">
                     {flights === null ? null : //if null return null
                         flights.length === 0 ? (
                             <p className="text-center text-black font-semibold">No flights found</p>//if not null but empty [] means no flights found
                         ) : (
-                            flights.map(f => (
-                                <div
-                                    key={f.FlightID}
-                                    className="p-2 border-b bg-blend-soft-light mix-blend-luminosity rounded-md mb-2 hover:bg-black cursor-pointer "
-                                    onClick={() => handleClick(f.FlightID, f.FlightName)}
-                                >
-                                    <span className='font-semibold text-center hover:text-amber-50'>{f.FlightID}. {f.FlightName} : {f.Source} → {f.Destination} on {new Date(f.ArrivalTime).toLocaleString()}</span>
-                                </div>
-                            ))
+                            // flights.map(f => (
+                            //     <div
+                            //         key={f.FlightID}
+                            //         className="p-2 border-b bg-blend-soft-light mix-blend-luminosity rounded-md mb-2 hover:bg-black cursor-pointer "
+                            //         onClick={() => handleClick(f.FlightID, f.FlightName)}
+                            //     >
+                            //         <span className='font-semibold text-center hover:text-amber-50'>{f.FlightID}. {f.FlightName} : {f.Source} → {f.Destination} on {new Date(f.ArrivalTime).toLocaleString()}</span>
+                            //     </div>
+                            // ))
+                            <>
+                               {flights.slice(0, visibleCount).map(f => (
+                                    <div
+                                        key={f.FlightID}
+                                        className="p-4 border-b bg-white/5 border-cyan-900/20 rounded-md mb-2 hover:bg-black hover:text-white cursor-pointer transition-colors"
+                                        onClick={() => handleClick(f.FlightID, f.FlightName)}
+                                    >
+                                        <span className='font-semibold'>
+                                            {f.FlightID}. {f.FlightName} : {f.Source} → {f.Destination} on {new Date(f.ArrivalTime).toLocaleString()}
+                                        </span>
+                                    </div>
+                                ))}
+
+                                {/* SEE MORE BUTTON LOGIC */}
+                                {flights.length > visibleCount && (
+                                    <div className="flex justify-center mt-4">
+                                        <button 
+                                            type="button"
+                                            onClick={handleSeeMore}
+                                            disabled={loadingMore}
+                                            className="flex items-center gap-2 text-cyan-600 font-bold border-b-2 border-cyan-600 hover:text-cyan-800 hover:border-cyan-800 transition-all cursor-pointer pb-1 disabled:opacity-50"
+                                        >
+                                            {loadingMore ? (
+                                                <>
+                                                    <div className="w-4 h-4 border-2 border-cyan-600/30 border-t-cyan-600 rounded-full animate-spin"></div>
+                                                    <span>Loading...</span>
+                                                </>
+                                            ) : (
+                                                "See More Results"
+                                            )}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )
                     }
                 </div>

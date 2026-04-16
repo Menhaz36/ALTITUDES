@@ -6,7 +6,13 @@ import tailwindcss from '@tailwindcss/vite'
 export default defineConfig({
   server: {
     proxy: {
-      '/api': 'http://localhost:3000'
+      // '/api': 'http://localhost:3000'
+      '/api':{
+        target:'https://altitudes-9sn7.onrender.com',
+        changeOrigin:true,
+        secure:false
+      
+      }
     }
   },
   plugins: [

@@ -96,7 +96,7 @@ const Navbar = () => {
                 }
             `}</style>
             <div className="relative inline-block p-0.5 rounded-full overflow-hidden hover:scale-105 transition duration-300 active:scale-100 before:content-[''] before:absolute before:inset-0 before:bg-[conic-gradient(from_0deg,_#FFFFFF,_#FFFFFF30,_#FFFFFF)] button-wrapper group">
-                <button
+                {/* <button
                     onClick={handleLogout}
                     className="relative z-10 bg-black text-white rounded-full px-8 py-3 font-medium text-sm cursor-pointer"
                 >
@@ -106,6 +106,27 @@ const Navbar = () => {
                     <span className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-0 group-hover:opacity-100">
                         Logout
                     </span>
+                </button> */}
+                <button
+                    onClick={handleLogout}
+                    disabled={Loading} // Prevent multiple clicks
+                    className="relative z-10 bg-black text-white rounded-full px-8 py-3 font-medium text-sm cursor-pointer disabled:opacity-70 disabled:cursor-not-allowed"
+                >
+                    {Loading ? (
+                        <span className="flex items-center gap-2">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            Logging out...
+                        </span>
+                    ) : (
+                        <>
+                            <span className="block transition-opacity duration-300 opacity-100 group-hover:opacity-0">
+                                {username}
+                            </span>
+                            <span className="absolute inset-0 flex items-center justify-center transition-opacity duration-300 opacity-0 group-hover:opacity-100">
+                                Logout
+                            </span>
+                        </>
+                    )}
                 </button>
             </div>
 

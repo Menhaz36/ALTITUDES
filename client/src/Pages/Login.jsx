@@ -13,18 +13,28 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [errorMessage, setErrorMessage] = useState(null)
     const navigate = useNavigate();
+    const [loading, setLoading] = useState(false);//added laoding state
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await login(email, password);
-        if (success) {
-            console.log("Login successful");
-            navigate('/');
-        } else {
-            // Show error message
-            setErrorMessage("Invalid email or password");
-            alert("Login failed. Please check your credentials.");
+        setErrorMessage(null); // Reset error on new attempt
+        setLoading(true);      // Start loading
+        try{
+            const success = await login(email, password);
+            if (success) {
+                // console.log("Login successful");
+                navigate('/');
+            } else {
+                // Show error message
+                setErrorMessage("Invalid email or password");
+                alert("Login failed. Please check your credentials.");
+            }
         }
+        catch (error) {
+            setErrorMessage("An unexpected error occurred. Please try again.");
+        } finally {
+            setLoading(false); // Stop loading regardless of outcome
+        } 
     };
 
     return (
@@ -66,10 +76,15 @@ export default function Login() {
                     </div> */}
 
                     <button type="submit" 
-                    onClick={handleSubmit}
-                    className="mt-8 w-full h-11 border border-cyan-700 text-black rounded-full cursor-pointer  transition-all duration-300 ease-in-out
-               hover:bg-cyan-700 hover:border-cyan-400">
-                        Login
+                        onClick={handleSubmit}
+                        disabled={loading}
+                        className="mt-8 w-full h-11 border border-cyan-700 text-black rounded-full flex items-center justify-center cursor-pointer  transition-all duration-300 ease-in-out
+                hover:bg-cyan-700 hover:border-cyan-400">
+                            {loading ? (
+                            <div className="  w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        ) : (
+                            "Login"
+                        )}
                     </button>
                     {errorMessage && <p className="text-red-500 text-sm mt-2">{errorMessage}</p>}
                     <p className="text-gray-500/90 text-sm mt-4">Don’t have an account? <Link to='/Signup' className="text-cyan-500 hover:underline" >Sign up</Link></p>
