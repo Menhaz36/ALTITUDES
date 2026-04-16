@@ -1,6 +1,16 @@
+/*
+Refresh loop risk: You're using api for the /api/refresh call inside refreshAccessToken,
+ which itself is called from the interceptor. The !originalRequest.url?.includes("/api/refresh")
+  guard prevents an infinite loop, but if your baseURL causes the URL to look different on the 
+  retried request (e.g. absolute vs relative), that guard could silently fail. A safer pattern is
+   to use a raw axios.create() instance with no interceptors specifically for the refresh call.
+*/
+
+
 import React, { createContext, useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { getItem, setItem, removeItem } from "../utils/localStorage";
+import api from "../utils/api"; // Import the configured Axios instance
 
 export const AuthContext = createContext();
 
@@ -25,28 +35,48 @@ export const AuthProvider = ({ children }) => {
         });
         failedQueue.current = [];
     };
+    //comment out for deployment
+    // const clearAuth = () => {
+    //     removeItem("accessToken");
+    //     removeItem("refreshToken");
+    //     removeItem("user");
+    //     setAccessToken(null);
+    //     setRefreshToken(null);
+    //     setUser(null);
+    //     delete axios.defaults.headers.common["Authorization"];
 
+    // };
     const clearAuth = () => {
+        // 1. Clear Local Storage
         removeItem("accessToken");
         removeItem("refreshToken");
         removeItem("user");
+
+        // 2. Clear React State
         setAccessToken(null);
         setRefreshToken(null);
         setUser(null);
-        delete axios.defaults.headers.common["Authorization"];
+
+        // 3. Clear the Authorization header from your custom instance
+        // This ensures future calls via 'api.get' or 'api.post' don't send the token
+        delete api.defaults.headers.common["Authorization"];
     };
 
     const login = async (email, password) => {
         try {
-            const response = await axios.post("/api/login", { email, password });
+
+            //comment out for deployment
+            const response = await api.post("/api/login", { email, password });
             const { Username, accessToken: at, refreshToken: rt } = response.data;
 
             setItem("accessToken", at);
             setItem("refreshToken", rt);
             setAccessToken(at);
             setRefreshToken(rt);
-            axios.defaults.headers.common["Authorization"] = `Bearer ${at}`;
-
+            // Set the Authorization header for the custom 
+            //comment out deployment
+            //axios.defaults.headers.common["Authorization"] = `Bearer ${at}`;
+            api.defaults.headers.common["Authorization"] = `Bearer ${at}`;
             const userData = { name: Username, email };
             setUser(userData);
             setItem("user", userData);
@@ -59,7 +89,9 @@ export const AuthProvider = ({ children }) => {
 
     const register = async (name, email, password) => {
         try {
-            const response = await axios.post("/api/register", { name, email, password });
+            //comment out for deployment
+            // const response = await axios.post("/api/register", { name, email, password });
+            const response = await api.post("/api/register", { name, email, password });
             return { success: true, message: response.data.message };
         } catch (error) {
             return { success: false, message: error.response?.data?.message || "Registration failed" };
@@ -69,7 +101,9 @@ export const AuthProvider = ({ children }) => {
     const logout = async () => {
         try {
             if (refreshTokenRef.current) {
-                await axios.post("/api/logout", { refreshToken: refreshTokenRef.current });
+                //comment out for deployment
+                // await axios.post("/api/logout", { refreshToken: refreshTokenRef.current });
+                await api.post("/api/logout", { refreshToken: refreshTokenRef.current });
             }
         } catch (error) {
             console.error("Logout error:", error.response?.data || error.message);
@@ -84,13 +118,17 @@ export const AuthProvider = ({ children }) => {
 
         try {
             // Use a plain axios call (not the instance with interceptor) to avoid loops
-            const response = await axios.post("/api/refresh", { refreshToken: rt });
+            //comment out for deployment
+            //const response = await axios.post("/api/refresh", { refreshToken: rt });
+            const response = await api.post("/api/refresh", { refreshToken: rt });
+
             const { accessToken: newAt, refreshToken: newRt } = response.data;
 
             setAccessToken(newAt);
             setItem("accessToken", newAt);
-            axios.defaults.headers.common["Authorization"] = `Bearer ${newAt}`;
-
+            //comment out for deployment
+            //axios.defaults.headers.common["Authorization"] = `Bearer ${newAt}`;
+            api.defaults.headers.common["Authorization"] = `Bearer ${newAt}`;
             // Store rotated refresh token if server sends one back
             if (newRt) {
                 setRefreshToken(newRt);
@@ -114,10 +152,12 @@ export const AuthProvider = ({ children }) => {
     // Axios response interceptor — auto-refresh on 401
     useEffect(() => {
         if (accessToken) {
-            axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+            //comment out for deployment
+            //axios.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
+            api.defaults.headers.common["Authorization"] = `Bearer ${accessToken}`;
         }
-
-        const interceptor = axios.interceptors.response.use(
+        //comment out for deployment
+        const interceptor = api.interceptors.response.use(
             (response) => response,
             async (error) => {
                 const originalRequest = error.config;
@@ -136,7 +176,8 @@ export const AuthProvider = ({ children }) => {
                         })
                             .then((token) => {
                                 originalRequest.headers["Authorization"] = `Bearer ${token}`;
-                                return axios(originalRequest);
+                                //comment out for deployment
+                                return api(originalRequest);
                             })
                             .catch((err) => Promise.reject(err));
                     }
@@ -150,7 +191,8 @@ export const AuthProvider = ({ children }) => {
                     if (newToken) {
                         processQueue(null, newToken);
                         originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-                        return axios(originalRequest);
+                        //comment out for deployment
+                        return api(originalRequest);
                     } else {
                         processQueue(error, null);
                     }
@@ -159,8 +201,8 @@ export const AuthProvider = ({ children }) => {
                 return Promise.reject(error);
             }
         );
-
-        return () => axios.interceptors.response.eject(interceptor);
+        //comment out for deployment
+        return () => api.interceptors.response.eject(interceptor);
     }, []); // run once — interceptor uses ref for latest token
 
     // On page load: if we have a refresh token but no access token, try to get one
@@ -172,7 +214,8 @@ export const AuthProvider = ({ children }) => {
             if (rt && !at) {
                 await refreshAccessToken();
             } else if (at) {
-                axios.defaults.headers.common["Authorization"] = `Bearer ${at}`;
+                //comment out for deployment
+                api.defaults.headers.common["Authorization"] = `Bearer ${at}`;
             }
             setLoading(false);
         };

@@ -1,7 +1,7 @@
 import React from 'react';
 import axios from 'axios'; // run this-> npm i axios
 import { cityToIATA } from '../utils/iataMap.js';
-
+import api from '../utils/api.js'; // Import the configured Axios instance
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -29,12 +29,17 @@ const Search = () => {
             const from = cityToIATA[source] ?? source; // fallback to raw input
              const to   = cityToIATA[destination] ?? destination;
             console.log('date: ', {date});
-
-            const response = await axios.post('/api/search_duffel', { 
-                source: from,
-                destination: to,
-                departureDate: date
-                });
+            //comment out for deployment
+            // const response = await axios.post('/api/search_duffel', { 
+            //     source: from,
+            //     destination: to,
+            //     departureDate: date
+            //     });
+            const response = await api.post('/api/search_duffel', { 
+            source: from,
+            destination: to,
+            departureDate: date
+            });
 
             const flightsData = response.data[0];///YAHA TUMHARA RECIEVE HOGAAAA
             setFlights(flightsData);

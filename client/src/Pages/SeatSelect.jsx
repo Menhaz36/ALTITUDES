@@ -4,6 +4,8 @@ import Flight_id from "../components/bookSeat/Flight_id";
 import { UseBooking } from "../contexts/Useboooking";
 import { useLocation } from "react-router-dom";  //read the state passed via navigate
 
+import api from "../utils/api"; // Import the configured Axios instance with interceptors
+
 const SeatSelect = () => {
   const { bookingData } = UseBooking();
   const selectedFlight = bookingData?.selectedFlight;
@@ -50,7 +52,9 @@ const SeatSelect = () => {
   const fetchBookedSeats = async () => {
       try {
         //  Hit YOUR MongoDB, not Duffel
-        const response = await axios.get(`/api/seats/${flightId}`); //find booked seats so that seatmap can disable them
+        //comment out for deployment
+        // const response = await axios.get(`/api/seats/${flightId}`); //find booked seats so that seatmap can disable them
+        const response = await api.get(`/api/seats/${flightId}`); 
         setBookedSeats(response.data.bookedSeats ?? []);
       } catch (error) {
         console.error("Error fetching booked seats:", error);

@@ -4,7 +4,7 @@ import '../../App.css'
 import './final.css'
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-
+import api from '../../utils/api'; // Import the configured Axios instance with interceptors
 
 const Final = () => {
 
@@ -49,11 +49,14 @@ const Final = () => {
                     const token = localStorage.getItem("accessToken"); // ✅ get JWT token
                     console.log("Token found:");
                     console.log(bookingData);
-                    const response = await axios.post('/api/seats/bookings', bookingData, {
-                        headers: {
-                            'Authorization': `Bearer ${token}`,  // ✅ send JWT
-                        },
-                    });
+                    //comment out for deployment
+
+                    // const response = await axios.post('/api/seats/bookings', bookingData, {
+                    //     headers: {
+                    //         'Authorization': `Bearer ${token}`,  // ✅ send JWT
+                    //     },
+                    // });
+                    const response = await api.post('/api/seats/bookings', bookingData);
 
                     if (response.status !== 200) {
                         throw new Error('Failed to store booking data');

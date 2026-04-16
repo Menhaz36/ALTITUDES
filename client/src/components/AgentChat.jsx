@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import axios from "axios";
+import api from "../utils/api";
 
 const SUGGESTIONS = [
   "Search flights from Delhi to Mumbai tomorrow",
@@ -183,11 +184,18 @@ const AgentChat = () => {
 
     try {
       const token = localStorage.getItem("accessToken");
-      const { data } = await axios.post(
+      //comment out for deployment
+      // const { data } = await axios.post(
+      //   "/api/agent",
+      //   { messages: updatedMessages },
+      //   { headers: { Authorization: `Bearer ${token}` } }
+      // );
+       const { data } = await api.post(
         "/api/agent",
         { messages: updatedMessages },
         { headers: { Authorization: `Bearer ${token}` } }
       );
+
 
       const newMessages = [...data.messages];
       if (data.reply) newMessages.push({ role: "assistant", content: data.reply });
